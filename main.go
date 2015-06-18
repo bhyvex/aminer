@@ -17,18 +17,11 @@
 package main
 
 import (
-	"bufio"
-	"encoding/json"
-	"fmt"
-	"log"
 	"net/http"
-	"os"
-	"strings"
 	"time"
 
 	"github.com/minio/cli"
 	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 )
 
 // LogMessage is a serializable json log message
@@ -57,100 +50,6 @@ func connectToMongo(c *cli.Context) *mgo.Session {
 	// make this configurable
 	db = session.DB("test").C("downloads")
 	return session
-}
-
-func runPopulateCmd(c *cli.Context) {
-	if len(c.Args()) > 1 || c.Args().First() == "help" {
-		cli.ShowCommandHelpAndExit(c, "populate", 1) // last argument is exit code
-	}
-	s := connectToMongo(c)
-	defer s.Close()
-	f, err := os.Open(strings.TrimSpace(c.Args().First()))
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer f.Close()
-
-	scanner := bufio.NewScanner(f)
-	scanner.Split(bufio.ScanLines)
-
-	var message LogMessage
-	for scanner.Scan() {
-		json.Unmarshal([]byte(scanner.Text()), &message)
-		err = db.Insert(&message)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-}
-
-func runFindCmd(c *cli.Context) {
-	if len(c.Args()) > 1 || c.Args().First() == "help" {
-		cli.ShowCommandHelpAndExit(c, "find", 1) // last argument is exit code
-	}
-	s := connectToMongo(c)
-	defer s.Close()
-	switch {
-	case strings.ToUpper(c.Args().First()) == "GET":
-		result := LogMessage{}
-		iter := db.Find(bson.M{"http.request.method": "GET"}).Iter()
-		for iter.Next(&result) {
-			if strings.Contains(result.HTTP.Request.RemoteAddr, "50.204.118.154") {
-				continue
-			}
-			if strings.Contains(result.HTTP.Request.RemoteAddr, "10.134.253.170") {
-				continue
-			}
-			fmt.Print(result.HTTP.Request.Method)
-			fmt.Print("    ")
-			fmt.Print(result.HTTP.Request.RemoteAddr)
-			fmt.Print("    ")
-			fmt.Print(result.HTTP.Request.RequestURI)
-			fmt.Println("    ")
-		}
-	case strings.ToUpper(c.Args().First()) == "HEAD":
-		result := LogMessage{}
-		iter := db.Find(bson.M{"http.request.method": "HEAD"}).Iter()
-		for iter.Next(&result) {
-			if strings.Contains(result.HTTP.Request.RemoteAddr, "50.204.118.154") {
-				continue
-			}
-			if strings.Contains(result.HTTP.Request.RemoteAddr, "10.134.253.170") {
-				continue
-			}
-			fmt.Print(result.HTTP.Request.Method)
-			fmt.Print("    ")
-			fmt.Print(result.HTTP.Request.RemoteAddr)
-			fmt.Print("    ")
-			fmt.Print(result.HTTP.Request.RequestURI)
-			fmt.Println("    ")
-		}
-	}
-}
-
-var commands = []cli.Command{
-	findCmd,
-	populateCmd,
-}
-
-var findCmd = cli.Command{
-	Name:   "find",
-	Usage:  "find all documents for a map",
-	Action: runFindCmd,
-}
-
-var populateCmd = cli.Command{
-	Name:   "populate",
-	Usage:  "populate your mongo instance with new data",
-	Action: runPopulateCmd,
-}
-
-var flags = []cli.Flag{
-	cli.StringFlag{
-		Name:  "server",
-		Value: "localhost",
-		Usage: "IP/HOSTNAME of your mongodb instance",
-	},
 }
 
 func main() {
