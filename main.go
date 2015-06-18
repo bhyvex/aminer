@@ -45,36 +45,39 @@ type LogMessage struct {
 	}
 }
 
-var session *mgo.Session
+var db *mgo.Collection
 
-func connectToMongo(c *cli.Context) {
+func connectToMongo(c *cli.Context) *mgo.Session {
 	session, err := mgo.Dial(c.GlobalString("server"))
 	if err != nil {
 		panic(err)
 	}
-	defer session.Close()
-
 	// Optional. Switch the session to a monotonic behavior.
 	session.SetMode(mgo.Monotonic, true)
+	// make this configurable
+	db = session.DB("test").C("downloads")
+	return session
 }
 
 func runPopulateCmd(c *cli.Context) {
-	f, err := os.Open(c.Args()[0])
+	if len(c.Args()) > 1 || c.Args().First() == "help" {
+		cli.ShowCommandHelpAndExit(c, "populate", 1) // last argument is exit code
+	}
+	s := connectToMongo(c)
+	defer s.Close()
+	f, err := os.Open(strings.TrimSpace(c.Args().First()))
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer f.Close()
 
-	connectToMongo(c)
-	// make this configurable
-	m := session.DB("test").C("downloads")
 	scanner := bufio.NewScanner(f)
 	scanner.Split(bufio.ScanLines)
 
 	var message LogMessage
 	for scanner.Scan() {
 		json.Unmarshal([]byte(scanner.Text()), &message)
-		err = m.Insert(&message)
+		err = db.Insert(&message)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -82,27 +85,46 @@ func runPopulateCmd(c *cli.Context) {
 }
 
 func runFindCmd(c *cli.Context) {
-	connectToMongo(c)
-	// make this configurable
-	m := session.DB("test").C("downloads")
-	result := LogMessage{}
-	iter := m.Find(bson.M{"http.request.method": "GET"}).Iter()
-	for iter.Next(&result) {
-		if result.HTTP.Request.Method != "GET" {
-			continue
+	if len(c.Args()) > 1 || c.Args().First() == "help" {
+		cli.ShowCommandHelpAndExit(c, "find", 1) // last argument is exit code
+	}
+	s := connectToMongo(c)
+	defer s.Close()
+	switch {
+	case strings.ToUpper(c.Args().First()) == "GET":
+		result := LogMessage{}
+		iter := db.Find(bson.M{"http.request.method": "GET"}).Iter()
+		for iter.Next(&result) {
+			if strings.Contains(result.HTTP.Request.RemoteAddr, "50.204.118.154") {
+				continue
+			}
+			if strings.Contains(result.HTTP.Request.RemoteAddr, "10.134.253.170") {
+				continue
+			}
+			fmt.Print(result.HTTP.Request.Method)
+			fmt.Print("    ")
+			fmt.Print(result.HTTP.Request.RemoteAddr)
+			fmt.Print("    ")
+			fmt.Print(result.HTTP.Request.RequestURI)
+			fmt.Println("    ")
 		}
-		if strings.Contains(result.HTTP.Request.RemoteAddr, "50.204.118.154") {
-			continue
+	case strings.ToUpper(c.Args().First()) == "PUT":
+		result := LogMessage{}
+		iter := db.Find(bson.M{"http.request.method": "PUT"}).Iter()
+		for iter.Next(&result) {
+			if strings.Contains(result.HTTP.Request.RemoteAddr, "50.204.118.154") {
+				continue
+			}
+			if strings.Contains(result.HTTP.Request.RemoteAddr, "10.134.253.170") {
+				continue
+			}
+			fmt.Print(result.HTTP.Request.Method)
+			fmt.Print("    ")
+			fmt.Print(result.HTTP.Request.RemoteAddr)
+			fmt.Print("    ")
+			fmt.Print(result.HTTP.Request.RequestURI)
+			fmt.Println("    ")
 		}
-		if strings.Contains(result.HTTP.Request.RemoteAddr, "10.134.253.170") {
-			continue
-		}
-		fmt.Print(result.HTTP.Request.Method)
-		fmt.Print("    ")
-		fmt.Print(result.HTTP.Request.RemoteAddr)
-		fmt.Print("    ")
-		fmt.Print(result.HTTP.Request.RequestURI)
-		fmt.Println("    ")
 	}
 }
 
@@ -112,15 +134,15 @@ var commands = []cli.Command{
 }
 
 var findCmd = cli.Command{
-	Name:        "find",
-	Description: "find all documents for a map",
-	Action:      runFindCmd,
+	Name:   "find",
+	Usage:  "find all documents for a map",
+	Action: runFindCmd,
 }
 
 var populateCmd = cli.Command{
-	Name:        "populate",
-	Description: "populate your mongo instance with new data",
-	Action:      runPopulateCmd,
+	Name:   "populate",
+	Usage:  "populate your mongo instance with new data",
+	Action: runPopulateCmd,
 }
 
 var flags = []cli.Flag{
