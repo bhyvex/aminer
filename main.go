@@ -108,9 +108,9 @@ func runFindCmd(c *cli.Context) {
 			fmt.Print(result.HTTP.Request.RequestURI)
 			fmt.Println("    ")
 		}
-	case strings.ToUpper(c.Args().First()) == "PUT":
+	case strings.ToUpper(c.Args().First()) == "HEAD":
 		result := LogMessage{}
-		iter := db.Find(bson.M{"http.request.method": "PUT"}).Iter()
+		iter := db.Find(bson.M{"http.request.method": "HEAD"}).Iter()
 		for iter.Next(&result) {
 			if strings.Contains(result.HTTP.Request.RemoteAddr, "50.204.118.154") {
 				continue
