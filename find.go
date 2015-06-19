@@ -30,15 +30,20 @@ func runFindCmd(c *cli.Context) {
 	}
 	s := connectToMongo(c)
 	defer s.Close()
+	var result LogMessage
 	switch {
 	case strings.ToUpper(c.Args().First()) == "GET":
-		result := LogMessage{}
 		iter := db.Find(bson.M{"http.request.method": "GET"}).Iter()
 		for iter.Next(&result) {
-			if strings.Contains(result.HTTP.Request.RemoteAddr, "50.204.118.154") {
-				continue
+			filters := strings.Split(c.GlobalString("filter"), ",")
+			var skip bool
+			for _, filter := range filters {
+				if strings.Contains(result.HTTP.Request.RemoteAddr, filter) {
+					skip = true
+					break
+				}
 			}
-			if strings.Contains(result.HTTP.Request.RemoteAddr, "10.134.253.170") {
+			if skip {
 				continue
 			}
 			fmt.Print(result.HTTP.Request.Method)
@@ -49,14 +54,13 @@ func runFindCmd(c *cli.Context) {
 			fmt.Println("    ")
 		}
 	case strings.ToUpper(c.Args().First()) == "HEAD":
-		result := LogMessage{}
 		iter := db.Find(bson.M{"http.request.method": "HEAD"}).Iter()
 		for iter.Next(&result) {
-			if strings.Contains(result.HTTP.Request.RemoteAddr, "50.204.118.154") {
-				continue
-			}
-			if strings.Contains(result.HTTP.Request.RemoteAddr, "10.134.253.170") {
-				continue
+			filters := strings.Split(c.GlobalString("filter"), ",")
+			for _, filter := range filters {
+				if strings.Contains(result.HTTP.Request.RemoteAddr, filter) {
+					continue
+				}
 			}
 			fmt.Print(result.HTTP.Request.Method)
 			fmt.Print("    ")

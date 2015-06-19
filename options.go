@@ -41,4 +41,9 @@ var flags = []cli.Flag{
 		Value: "localhost",
 		Usage: "IP/HOSTNAME of your mongodb instance",
 	},
+	cli.StringFlag{
+		Name:  "filter",
+		Value: "50.204.118.154,10.134.253.170",
+		Usage: "Provide command separated list of ip's to be filtered",
+	},
 }

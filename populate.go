@@ -44,10 +44,8 @@ func runPopulateCmd(c *cli.Context) {
 
 	var message LogMessage
 	for scanner.Scan() {
-		err := json.Unmarshal([]byte(scanner.Text()), &message)
-		if err != nil {
-			continue
-		}
+		// ignore errors purposefully here, since json.Unmarshal fails for io.ReadCloser
+		json.Unmarshal([]byte(scanner.Text()), &message)
 		// do not insert if already exists
 		err = db.Find(bson.M{"http.request.remoteaddr": message.HTTP.Request.RemoteAddr}).One(nil)
 		if err != nil {
