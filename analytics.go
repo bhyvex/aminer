@@ -38,7 +38,7 @@ func updateGoogleAnalytics(c *configV1, path string) error {
 	payload.WriteString("&tid=" + c.TID)
 	payload.WriteString("&cid=" + c.CID)
 	payload.WriteString("&t=pageview")
-	payload.WriteString("&ds=" + mustURLEncodeName(path))
+	payload.WriteString("&dp=" + mustURLEncodeName(path))
 	req, err := http.NewRequest("POST", SSLAnalytics, &payload)
 	if err != nil {
 		return err

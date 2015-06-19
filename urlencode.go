@@ -19,7 +19,6 @@ package main
 import (
 	"encoding/hex"
 	"errors"
-	"regexp"
 	"strings"
 	"unicode/utf8"
 )
@@ -30,32 +29,21 @@ func mustURLEncodeName(name string) string {
 }
 
 func urlEncodeName(name string) (string, error) {
-	// if name matches reserved string, no need to encode them
-	reservedNames := regexp.MustCompile("^[a-zA-Z0-9-_.~/]+$")
-	if reservedNames.MatchString(name) {
-		return name, nil
-	}
 	var encodedName string
 	for _, s := range name {
 		if 'A' <= s && s <= 'Z' || 'a' <= s && s <= 'z' || '0' <= s && s <= '9' { // Â§2.3 Unreserved characters (mark)
 			encodedName = encodedName + string(s)
 			continue
 		}
-		switch s {
-		case '-', '_', '.', '~', '/': // Â§2.3 Unreserved characters (mark)
-			encodedName = encodedName + string(s)
-			continue
-		default:
-			len := utf8.RuneLen(s)
-			if len < 0 {
-				return "", errors.New("invalid utf-8")
-			}
-			u := make([]byte, len)
-			utf8.EncodeRune(u, s)
-			for _, r := range u {
-				hex := hex.EncodeToString([]byte{r})
-				encodedName = encodedName + "%" + strings.ToUpper(hex)
-			}
+		len := utf8.RuneLen(s)
+		if len < 0 {
+			return "", errors.New("invalid utf-8")
+		}
+		u := make([]byte, len)
+		utf8.EncodeRune(u, s)
+		for _, r := range u {
+			hex := hex.EncodeToString([]byte{r})
+			encodedName = encodedName + "%" + strings.ToUpper(hex)
 		}
 	}
 	return encodedName, nil
