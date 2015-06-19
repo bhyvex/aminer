@@ -26,16 +26,11 @@ const (
 	SSLAnalytics = "https://ssl.google-analytics.com/collect"
 )
 
-type config struct {
-	tid string
-	cid string
-}
-
-func postAnalytics(c config) error {
+func postAnalytics(c configV1) error {
 	var payload bytes.Buffer
 	payload.WriteString("v=1")
-	payload.WriteString("&tid=" + c.tid)
-	payload.WriteString("&cid=" + c.cid)
+	payload.WriteString("&tid=" + c.Tid)
+	payload.WriteString("&cid=" + c.Cid)
 	payload.WriteString("&t=event")
 	payload.WriteString("&ds=web")
 
