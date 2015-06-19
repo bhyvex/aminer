@@ -19,20 +19,25 @@ package main
 import (
 	"bytes"
 	"errors"
+	"log"
 	"net/http"
+	"time"
+
+	"github.com/minio/cli"
+	"gopkg.in/mgo.v2/bson"
 )
 
 const (
 	SSLAnalytics = "https://ssl.google-analytics.com/collect"
 )
 
-func postAnalytics(c configV1) error {
+func updateGoogleAnalytics(c *configV1, path string) error {
 	var payload bytes.Buffer
 	payload.WriteString("v=1")
-	payload.WriteString("&tid=" + c.Tid)
-	payload.WriteString("&cid=" + c.Cid)
-	payload.WriteString("&t=event")
-	payload.WriteString("&ds=web")
+	payload.WriteString("&tid=" + c.TID)
+	payload.WriteString("&cid=" + c.CID)
+	payload.WriteString("&t=pageview")
+	payload.WriteString("&ds=" + mustURLEncodeName(path))
 
 	req, err := http.NewRequest("POST", SSLAnalytics, &payload)
 	if err != nil {
@@ -50,4 +55,24 @@ func postAnalytics(c configV1) error {
 	}
 
 	return nil
+}
+
+func runAnalyticsCmd(c *cli.Context) {
+	conf, err := loadConfigV1()
+	if err != nil {
+		log.Fatal(err)
+	}
+	s := connectToMongo(c)
+	defer s.Close()
+
+	var result LogMessage
+	iter := db.Find(bson.M{"http.request.method": "GET"}).Iter()
+	for iter.Next(&result) {
+		if time.Since(result.StartTime) < time.Duration(24*time.Hour) {
+			err = updateGoogleAnalytics(conf, result.HTTP.Request.RequestURI)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+	}
 }
