@@ -48,7 +48,11 @@ func updateGoogleAnalytics(c *configV1, referer, path string) error {
 	payload.WriteString("&ds=web")
 	// data referrer
 	payload.WriteString("&dr=" + mustURLEncodeName(referer))
-	// document path
+	// Document hostname
+	payload.WriteString("&dh=minio.io")
+	// Document title
+	payload.WriteString("&dt=downloads")
+	// Document path
 	payload.WriteString("&dp=" + mustURLEncodeName(path))
 	if !c.Production {
 		req, err := http.NewRequest("GET", DebugAnalytics+"?"+payload.String(), nil)
