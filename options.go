@@ -21,6 +21,8 @@ import "github.com/minio/cli"
 var commands = []cli.Command{
 	findCmd,
 	populateCmd,
+	analyticsCmd,
+	configCmd,
 }
 
 var findCmd = cli.Command{
@@ -33,6 +35,18 @@ var populateCmd = cli.Command{
 	Name:   "populate",
 	Usage:  "populate your mongo instance with new data",
 	Action: runPopulateCmd,
+}
+
+var analyticsCmd = cli.Command{
+	Name:   "analytics",
+	Usage:  "Update your google analytics with access log information",
+	Action: runAnalyticsCmd,
+}
+
+var configCmd = cli.Command{
+	Name:   "config",
+	Usage:  "",
+	Action: runConfigCmd,
 }
 
 var flags = []cli.Flag{
