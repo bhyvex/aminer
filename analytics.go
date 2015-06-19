@@ -32,13 +32,21 @@ const (
 	SSLAnalytics = "https://ssl.google-analytics.com/collect"
 )
 
-func updateGoogleAnalytics(c *configV1, path string) error {
+func updateGoogleAnalytics(c *configV1, referer, path string) error {
 	var payload bytes.Buffer
 	payload.WriteString("v=1")
+	// Tracking id UA-XXXXXXXX-1
 	payload.WriteString("&tid=" + c.TID)
+	// User unique id UUID
 	payload.WriteString("&cid=" + c.CID)
+	// Type of hit
 	payload.WriteString("&t=pageview")
-	payload.WriteString("&ds=" + mustURLEncodeName(path))
+	// Data source
+	payload.WriteString("&ds=web")
+	// data referrer
+	payload.WriteString("&dr=" + mustURLEncodeName(referer))
+	// document path
+	payload.WriteString("&dp=" + mustURLEncodeName(path))
 	req, err := http.NewRequest("POST", SSLAnalytics, &payload)
 	if err != nil {
 		return err
@@ -66,7 +74,7 @@ func runAnalyticsCmd(c *cli.Context) {
 	iter := db.Find(bson.M{"http.request.method": "GET"}).Iter()
 	for iter.Next(&result) {
 		if time.Since(result.StartTime) < time.Duration(24*time.Hour) {
-			err = updateGoogleAnalytics(conf, result.HTTP.Request.RequestURI)
+			err = updateGoogleAnalytics(conf, result.HTTP.Request.Referer(), result.HTTP.Request.RequestURI)
 			if err != nil {
 				log.Fatal(err)
 			}
