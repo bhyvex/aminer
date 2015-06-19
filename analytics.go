@@ -27,6 +27,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+// SSLAnalytics
 const (
 	SSLAnalytics = "https://ssl.google-analytics.com/collect"
 )
