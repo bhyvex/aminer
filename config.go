@@ -28,8 +28,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/minio/aminer/pkg/quick"
 	"github.com/minio/cli"
-	"github.com/minio/mc/pkg/quick"
 )
 
 // configV1
