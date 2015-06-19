@@ -19,6 +19,8 @@ package main
 import (
 	"bytes"
 	"errors"
+	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"time"
@@ -29,7 +31,8 @@ import (
 
 // SSLAnalytics
 const (
-	SSLAnalytics = "https://ssl.google-analytics.com/collect"
+	SSLAnalytics   = "https://ssl.google-analytics.com/collect"
+	DebugAnalytics = "https://www.google-analytics.com/debug/collect"
 )
 
 func updateGoogleAnalytics(c *configV1, referer, path string) error {
@@ -47,17 +50,32 @@ func updateGoogleAnalytics(c *configV1, referer, path string) error {
 	payload.WriteString("&dr=" + mustURLEncodeName(referer))
 	// document path
 	payload.WriteString("&dp=" + mustURLEncodeName(path))
+	if !c.Production {
+		req, err := http.NewRequest("GET", DebugAnalytics+"?"+payload.String(), nil)
+		if err != nil {
+			return err
+		}
+		client := http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			return err
+		}
+		if resp.StatusCode != http.StatusOK {
+			return errors.New("Data was not uploaded error: " + resp.Status)
+		}
+		var b bytes.Buffer
+		io.Copy(&b, resp.Body)
+		fmt.Println(b.String())
+		return nil
+	}
 	req, err := http.NewRequest("POST", SSLAnalytics, &payload)
 	if err != nil {
 		return err
 	}
 	client := http.Client{}
-	resp, err := client.Do(req)
+	_, err = client.Do(req)
 	if err != nil {
 		return err
-	}
-	if resp.StatusCode != http.StatusOK {
-		return errors.New("Data was not uploaded error: " + resp.Status)
 	}
 	return nil
 }
