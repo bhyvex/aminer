@@ -39,22 +39,18 @@ func updateGoogleAnalytics(c *configV1, path string) error {
 	payload.WriteString("&cid=" + c.CID)
 	payload.WriteString("&t=pageview")
 	payload.WriteString("&ds=" + mustURLEncodeName(path))
-
 	req, err := http.NewRequest("POST", SSLAnalytics, &payload)
 	if err != nil {
 		return err
 	}
-
 	client := http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		return err
 	}
-
 	if resp.StatusCode != http.StatusOK {
 		return errors.New("Data was not uploaded error: " + resp.Status)
 	}
-
 	return nil
 }
 

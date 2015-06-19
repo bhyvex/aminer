@@ -31,6 +31,9 @@ func runPopulateCmd(c *cli.Context) {
 	if len(c.Args()) > 1 || c.Args().First() == "help" {
 		cli.ShowCommandHelpAndExit(c, "populate", 1) // last argument is exit code
 	}
+	if strings.TrimSpace(c.Args().First()) == "" {
+		cli.ShowCommandHelpAndExit(c, "populate", 1) // last argument is exit code
+	}
 	s := connectToMongo(c)
 	defer s.Close()
 	f, err := os.Open(strings.TrimSpace(c.Args().First()))
