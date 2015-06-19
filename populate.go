@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/minio/cli"
+	"gopkg.in/mgo.v2/bson"
 )
 
 func runPopulateCmd(c *cli.Context) {
@@ -43,10 +44,17 @@ func runPopulateCmd(c *cli.Context) {
 
 	var message LogMessage
 	for scanner.Scan() {
-		json.Unmarshal([]byte(scanner.Text()), &message)
-		err = db.Insert(&message)
+		err := json.Unmarshal([]byte(scanner.Text()), &message)
 		if err != nil {
-			log.Fatal(err)
+			continue
+		}
+		// do not insert if already exists
+		err = db.Find(bson.M{"http.request.remoteaddr": message.HTTP.Request.RemoteAddr}).One(nil)
+		if err != nil {
+			err = db.Insert(&message)
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 	}
 }

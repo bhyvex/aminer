@@ -39,7 +39,7 @@ func postAnalytics(c config) error {
 	payload.WriteString("&t=event")
 	payload.WriteString("&ds=web")
 
-	req, err := http.NewRequest("POST", SSLAnalytics, payload)
+	req, err := http.NewRequest("POST", SSLAnalytics, &payload)
 	if err != nil {
 		return err
 	}
@@ -53,4 +53,6 @@ func postAnalytics(c config) error {
 	if resp.StatusCode != http.StatusOK {
 		return errors.New("Data was not uploaded error: " + resp.Status)
 	}
+
+	return nil
 }
