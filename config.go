@@ -34,9 +34,10 @@ import (
 
 // configV1
 type configV1 struct {
-	Version string
-	TID     string
-	CID     string
+	Version    string
+	TID        string
+	CID        string
+	Production bool
 }
 
 // cached variables should *NEVER* be accessed directly from outside this file.
