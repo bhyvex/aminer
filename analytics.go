@@ -58,7 +58,7 @@ func updateGoogleAnalytics(c *configV1, referer, path string) error {
 	// Tracking id UA-XXXXXXXX-1
 	payload.WriteString("&tid=" + c.TID)
 	// User unique id UUID
-	payload.WriteString("&cid=" + c.CID)
+	payload.WriteString("&cid=" + newUUID())
 	// Type of hit
 	payload.WriteString("&t=pageview")
 	// Data source

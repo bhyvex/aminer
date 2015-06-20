@@ -36,7 +36,6 @@ import (
 type configV1 struct {
 	Version    string
 	TID        string
-	CID        string
 	Production bool
 }
 
@@ -96,7 +95,6 @@ func newConfigV1() *configV1 {
 	conf := new(configV1)
 	conf.Version = "0.0.1"
 	conf.TID = ""
-	conf.CID = newUUID()
 	return conf
 }
 
