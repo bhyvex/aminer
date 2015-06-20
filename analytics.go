@@ -52,7 +52,7 @@ func GetUserAgent(name string, version string, comments ...string) string {
 	return ""
 }
 
-func updateGoogleAnalytics(c *configV1, referer, path string) error {
+func updateGoogleAnalytics(c *configV1, result LogMessage) error {
 	var payload bytes.Buffer
 	payload.WriteString("v=1")
 	// Tracking id UA-XXXXXXXX-1
@@ -64,13 +64,17 @@ func updateGoogleAnalytics(c *configV1, referer, path string) error {
 	// Data source
 	payload.WriteString("&ds=downloads")
 	// data referrer
-	payload.WriteString("&dr=" + mustURLEncodeName(referer))
+	payload.WriteString("&dr=" + mustURLEncodeName(result.HTTP.Request.Referer()))
 	// Document hostname
-	payload.WriteString("&dh=dl.minio.io")
+	payload.WriteString("&dh=" + result.HTTP.Request.TLS.ServerName)
 	// Document title
 	payload.WriteString("&dt=downloads")
 	// Document path
-	payload.WriteString("&dp=" + mustURLEncodeName(path))
+	payload.WriteString("&dp=" + mustURLEncodeName(result.HTTP.Request.RequestURI))
+	// UserAgent override
+	payload.WriteString("&ua=" + mustURLEncodeName(result.HTTP.Request.UserAgent()))
+	// IP Override
+	payload.WriteString("&uip=" + strings.Split(result.HTTP.Request.RemoteAddr, ":")[0])
 	if !c.Production {
 		req, err := http.NewRequest("GET", DebugAnalytics+"?"+payload.String(), nil)
 		if err != nil {
@@ -115,7 +119,18 @@ func runAnalyticsCmd(c *cli.Context) {
 	iter := db.Find(bson.M{"http.request.method": "GET"}).Iter()
 	for iter.Next(&result) {
 		if time.Since(result.StartTime) < time.Duration(24*time.Hour) {
-			err = updateGoogleAnalytics(conf, result.HTTP.Request.Referer(), result.HTTP.Request.RequestURI)
+			filters := strings.Split(c.GlobalString("filter"), ",")
+			var skip bool
+			for _, filter := range filters {
+				if strings.Contains(result.HTTP.Request.RemoteAddr, filter) {
+					skip = true
+					break
+				}
+			}
+			if skip {
+				continue
+			}
+			err = updateGoogleAnalytics(conf, result)
 			if err != nil {
 				log.Fatal(err)
 			}
