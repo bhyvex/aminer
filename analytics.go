@@ -130,6 +130,9 @@ func runAnalyticsCmd(c *cli.Context) {
 			if skip {
 				continue
 			}
+			if !strings.HasPrefix(result.HTTP.Request.RequestURI, "/updates/2015") {
+				continue
+			}
 			err = updateGoogleAnalytics(conf, result)
 			if err != nil {
 				log.Fatal(err)

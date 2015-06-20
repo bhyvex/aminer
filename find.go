@@ -46,6 +46,9 @@ func runFindCmd(c *cli.Context) {
 			if skip {
 				continue
 			}
+			if !strings.HasPrefix(result.HTTP.Request.RequestURI, "/updates/2015") {
+				continue
+			}
 			fmt.Print(result.HTTP.Request.Method)
 			fmt.Print("    ")
 			fmt.Print(result.HTTP.Request.RemoteAddr)
@@ -61,6 +64,9 @@ func runFindCmd(c *cli.Context) {
 				if strings.Contains(result.HTTP.Request.RemoteAddr, filter) {
 					continue
 				}
+			}
+			if !strings.HasPrefix(result.HTTP.Request.RequestURI, "/updates/2015") {
+				continue
 			}
 			fmt.Print(result.HTTP.Request.Method)
 			fmt.Print("    ")
