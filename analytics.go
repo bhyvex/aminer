@@ -23,6 +23,8 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"runtime"
+	"strings"
 	"time"
 
 	"github.com/minio/cli"
@@ -35,6 +37,21 @@ const (
 	DebugAnalytics = "https://www.google-analytics.com/debug/collect"
 )
 
+// Global constants
+const (
+	AppName    = "aminer"
+	AppVersion = "0.0.1"
+)
+
+// GetUserAgent - get an rfc formatted user agent
+func GetUserAgent(name string, version string, comments ...string) string {
+	// if no name and version is set we do not add new user agents
+	if name != "" && version != "" {
+		return name + "/" + version + " (" + strings.Join(comments, "; ") + ") "
+	}
+	return ""
+}
+
 func updateGoogleAnalytics(c *configV1, referer, path string) error {
 	var payload bytes.Buffer
 	payload.WriteString("v=1")
@@ -45,11 +62,11 @@ func updateGoogleAnalytics(c *configV1, referer, path string) error {
 	// Type of hit
 	payload.WriteString("&t=pageview")
 	// Data source
-	payload.WriteString("&ds=web")
+	payload.WriteString("&ds=downloads")
 	// data referrer
 	payload.WriteString("&dr=" + mustURLEncodeName(referer))
 	// Document hostname
-	payload.WriteString("&dh=minio.io")
+	payload.WriteString("&dh=dl.minio.io")
 	// Document title
 	payload.WriteString("&dt=downloads")
 	// Document path
@@ -76,6 +93,8 @@ func updateGoogleAnalytics(c *configV1, referer, path string) error {
 	if err != nil {
 		return err
 	}
+	req.Header.Set("User-Agent", GetUserAgent(AppName, AppVersion, runtime.GOOS, runtime.GOARCH))
+
 	client := http.Client{}
 	_, err = client.Do(req)
 	if err != nil {
