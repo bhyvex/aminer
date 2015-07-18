@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/minio/aminer",
-	"GoVersion": "go1.4",
+	"GoVersion": "go1.4.2",
 	"Packages": [
 		"./..."
 	],
@@ -10,13 +10,13 @@
 			"Rev": "c00d27128bb88e9c1adab1a53cda9c72c6d1ff9b"
 		},
 		{
-			"ImportPath": "github.com/minio/check",
-			"Rev": "67f8c16c6c27bb03c82e41c2be533ace00035ab4"
-		},
-		{
 			"ImportPath": "github.com/minio/cli",
 			"Comment": "1.2.0-112-g823349c",
 			"Rev": "823349ce91e76834a4af0119d5bbc58fd4d2c6b0"
+		},
+		{
+			"ImportPath": "gopkg.in/check.v1",
+			"Rev": "64131543e7896d5bcc6bd5a76287eb75ea96c673"
 		},
 		{
 			"ImportPath": "gopkg.in/mgo.v2",
