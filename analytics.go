@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"github.com/minio/cli"
+	"github.com/minio/minio/pkg/probe"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -52,7 +53,7 @@ func GetUserAgent(name string, version string, comments ...string) string {
 	return ""
 }
 
-func updateGoogleAnalytics(c *configV1, result LogMessage) error {
+func updateGoogleAnalytics(c *configV1, result LogMessage) *probe.Error {
 	var payload bytes.Buffer
 	payload.WriteString("v=1")
 	// Tracking id UA-XXXXXXXX-1
@@ -78,15 +79,15 @@ func updateGoogleAnalytics(c *configV1, result LogMessage) error {
 	if !c.Production {
 		req, err := http.NewRequest("GET", DebugAnalytics+"?"+payload.String(), nil)
 		if err != nil {
-			return err
+			return probe.NewError(err)
 		}
 		client := http.Client{}
 		resp, err := client.Do(req)
 		if err != nil {
-			return err
+			return probe.NewError(err)
 		}
 		if resp.StatusCode != http.StatusOK {
-			return errors.New("Data was not uploaded error: " + resp.Status)
+			return probe.NewError(errors.New("Data was not uploaded error: " + resp.Status))
 		}
 		var b bytes.Buffer
 		io.Copy(&b, resp.Body)
@@ -95,14 +96,14 @@ func updateGoogleAnalytics(c *configV1, result LogMessage) error {
 	}
 	req, err := http.NewRequest("POST", SSLAnalytics, &payload)
 	if err != nil {
-		return err
+		return probe.NewError(err)
 	}
 	req.Header.Set("User-Agent", GetUserAgent(AppName, AppVersion, runtime.GOOS, runtime.GOARCH))
 
 	client := http.Client{}
 	_, err = client.Do(req)
 	if err != nil {
-		return err
+		return probe.NewError(err)
 	}
 	return nil
 }
@@ -110,7 +111,7 @@ func updateGoogleAnalytics(c *configV1, result LogMessage) error {
 func runAnalyticsCmd(c *cli.Context) {
 	conf, err := loadConfigV1()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(err.Trace())
 	}
 	s := connectToMongo(c)
 	defer s.Close()
@@ -133,9 +134,8 @@ func runAnalyticsCmd(c *cli.Context) {
 			if !strings.HasPrefix(result.HTTP.Request.RequestURI, "/updates/2015") {
 				continue
 			}
-			err = updateGoogleAnalytics(conf, result)
-			if err != nil {
-				log.Fatal(err)
+			if err := updateGoogleAnalytics(conf, result); err != nil {
+				log.Fatal(err.Trace())
 			}
 		}
 	}
