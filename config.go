@@ -29,8 +29,8 @@ import (
 	"sync"
 
 	"github.com/minio/cli"
-	"github.com/minio/minio/pkg/probe"
-	"github.com/minio/minio/pkg/quick"
+	"github.com/minio/minio-xl/pkg/probe"
+	"github.com/minio/minio-xl/pkg/quick"
 )
 
 // configV1
