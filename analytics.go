@@ -131,11 +131,11 @@ func runAnalyticsCmd(c *cli.Context) {
 			if skip {
 				continue
 			}
-			if !strings.HasPrefix(result.HTTP.Request.RequestURI, "/updates/2015") {
-				continue
-			}
-			if err := updateGoogleAnalytics(conf, result); err != nil {
-				log.Fatal(err.Trace())
+			if strings.HasSuffix(result.HTTP.Request.RequestURI, "minio") || strings.HasSuffix(result.HTTP.Request.RequestURI, "minio.exe") || strings.HasSuffix(result.HTTP.Request.RequestURI, "mc") || strings.HasSuffix(result.HTTP.Request.RequestURI, "mc.exe") {
+
+				if err := updateGoogleAnalytics(conf, result); err != nil {
+					log.Fatal(err.Trace())
+				}
 			}
 		}
 	}

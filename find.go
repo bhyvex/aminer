@@ -46,15 +46,15 @@ func runFindCmd(c *cli.Context) {
 			if skip {
 				continue
 			}
-			if !strings.HasPrefix(result.HTTP.Request.RequestURI, "/updates/2015") {
-				continue
+			if strings.HasSuffix(result.HTTP.Request.RequestURI, "minio") || strings.HasSuffix(result.HTTP.Request.RequestURI, "minio.exe") || strings.HasSuffix(result.HTTP.Request.RequestURI, "mc") || strings.HasSuffix(result.HTTP.Request.RequestURI, "mc.exe") {
+
+				fmt.Print(result.HTTP.Request.Method)
+				fmt.Print("    ")
+				fmt.Print(result.HTTP.Request.RemoteAddr)
+				fmt.Print("    ")
+				fmt.Print(result.HTTP.Request.RequestURI)
+				fmt.Println("    ")
 			}
-			fmt.Print(result.HTTP.Request.Method)
-			fmt.Print("    ")
-			fmt.Print(result.HTTP.Request.RemoteAddr)
-			fmt.Print("    ")
-			fmt.Print(result.HTTP.Request.RequestURI)
-			fmt.Println("    ")
 		}
 	case strings.ToUpper(c.Args().First()) == "HEAD":
 		iter := db.Find(bson.M{"http.request.method": "HEAD"}).Iter()
