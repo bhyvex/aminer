@@ -65,7 +65,7 @@ func updateGoogleAnalytics(c *configV1, result LogMessage) *probe.Error {
 	// Data source
 	payload.WriteString("&ds=downloads")
 	// data referrer
-	payload.WriteString("&dr=" + mustURLEncodeName(result.HTTP.Request.Referer()))
+	payload.WriteString("&dr=" + mustURLEncodeName(result.HTTP.Request.Header.Get("Referer")))
 	// Document hostname
 	payload.WriteString("&dh=" + result.HTTP.Request.TLS.ServerName)
 	// Document title
@@ -73,7 +73,7 @@ func updateGoogleAnalytics(c *configV1, result LogMessage) *probe.Error {
 	// Document path
 	payload.WriteString("&dp=" + mustURLEncodeName(result.HTTP.Request.RequestURI))
 	// UserAgent override
-	payload.WriteString("&ua=" + mustURLEncodeName(result.HTTP.Request.UserAgent()))
+	payload.WriteString("&ua=" + mustURLEncodeName(result.HTTP.Request.Header.Get("User-Agent")))
 	// IP Override
 	payload.WriteString("&uip=" + strings.Split(result.HTTP.Request.RemoteAddr, ":")[0])
 	if !c.Production {
@@ -131,10 +131,12 @@ func runAnalyticsCmd(c *cli.Context) {
 			if skip {
 				continue
 			}
-			if strings.HasSuffix(result.HTTP.Request.RequestURI, "minio") || strings.HasSuffix(result.HTTP.Request.RequestURI, "minio.exe") || strings.HasSuffix(result.HTTP.Request.RequestURI, "mc") || strings.HasSuffix(result.HTTP.Request.RequestURI, "mc.exe") {
+			if result.StatusMessage == "" || result.StatusMessage == "OK" {
+				if strings.HasSuffix(result.HTTP.Request.RequestURI, "minio") || strings.HasSuffix(result.HTTP.Request.RequestURI, "minio.exe") || strings.HasSuffix(result.HTTP.Request.RequestURI, "mc") || strings.HasSuffix(result.HTTP.Request.RequestURI, "mc.exe") {
 
-				if err := updateGoogleAnalytics(conf, result); err != nil {
-					log.Fatal(err.Trace())
+					if err := updateGoogleAnalytics(conf, result); err != nil {
+						log.Fatal(err.Trace())
+					}
 				}
 			}
 		}

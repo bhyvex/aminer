@@ -17,7 +17,10 @@
 package main
 
 import (
+	"crypto/tls"
+	"mime/multipart"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/minio/cli"
@@ -34,7 +37,25 @@ type LogMessage struct {
 	// HTTP detailed message
 	HTTP struct {
 		ResponseHeaders http.Header
-		Request         *http.Request
+		Request         struct {
+			Method           string
+			URL              *url.URL
+			Proto            string // "HTTP/1.0"
+			ProtoMajor       int    // 1
+			ProtoMinor       int    // 0
+			Header           http.Header
+			ContentLength    int64
+			TransferEncoding []string
+			Close            bool
+			Host             string
+			Form             url.Values
+			PostForm         url.Values
+			MultipartForm    *multipart.Form
+			Trailer          http.Header
+			RemoteAddr       string
+			RequestURI       string
+			TLS              *tls.ConnectionState
+		}
 	}
 }
 
