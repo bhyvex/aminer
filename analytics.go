@@ -67,7 +67,7 @@ func updateGoogleAnalytics(c *configV1, result LogMessage) *probe.Error {
 	// data referrer
 	payload.WriteString("&dr=" + mustURLEncodeName(result.HTTP.Request.Header.Get("Referer")))
 	// Document hostname
-	payload.WriteString("&dh=" + result.HTTP.Request.TLS.ServerName)
+	payload.WriteString("&dh=" + result.HTTP.Request.Host)
 	// Document title
 	payload.WriteString("&dt=downloads")
 	// Document path
