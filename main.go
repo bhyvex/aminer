@@ -27,6 +27,20 @@ import (
 	"gopkg.in/mgo.v2"
 )
 
+var supportedBinaries = []string{
+	"minio",
+	"mc",
+	"minio.exe",
+	"mc.exe",
+	"mc.zip",
+	"mc.gz",
+	"mc.tar.gz",
+	"minio.zip",
+	"minio.tar.gz",
+	"minio.gz",
+	// Add new binaries here.
+}
+
 // LogMessage is a serializable json log message
 type LogMessage struct {
 	StartTime     time.Time

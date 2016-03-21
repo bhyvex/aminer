@@ -58,23 +58,30 @@ func runFindRawCmd(c *cli.Context) {
 		if skip {
 			continue
 		}
-		if strings.HasSuffix(message.HTTP.Request.RequestURI, "minio") || strings.HasSuffix(message.HTTP.Request.RequestURI, "minio.exe") || strings.HasSuffix(message.HTTP.Request.RequestURI, "mc") || strings.HasSuffix(message.HTTP.Request.RequestURI, "mc.exe") {
-			if c.GlobalBool("json") {
-				type resultJSON struct {
-					Method     string
-					RemoteAddr string
-					RequestURI string
+		requestURI := message.HTTP.Request.RequestURI
+		for _, supportedBin := range supportedBinaries {
+			if strings.HasSuffix(requestURI, supportedBin) {
+				if c.GlobalBool("json") {
+					type resultJSON struct {
+						Method     string
+						RemoteAddr string
+						RequestURI string
+					}
+					resultBytes, _ := json.Marshal(resultJSON{
+						Method: message.HTTP.Request.Method,
+						RemoteAddr: message.HTTP.Request.RemoteAddr,
+						RequestURI: message.HTTP.Request.RequestURI,
+					})
+					fmt.Println(string(resultBytes))
+					continue
 				}
-				resultBytes, _ := json.Marshal(resultJSON{Method: message.HTTP.Request.Method, RemoteAddr: message.HTTP.Request.RemoteAddr, RequestURI: message.HTTP.Request.RequestURI})
-				fmt.Println(string(resultBytes))
-				continue
+				fmt.Print(message.HTTP.Request.Method)
+				fmt.Print("    ")
+				fmt.Print(message.HTTP.Request.RemoteAddr)
+				fmt.Print("    ")
+				fmt.Print(message.HTTP.Request.RequestURI)
+				fmt.Println("    ")
 			}
-			fmt.Print(message.HTTP.Request.Method)
-			fmt.Print("    ")
-			fmt.Print(message.HTTP.Request.RemoteAddr)
-			fmt.Print("    ")
-			fmt.Print(message.HTTP.Request.RequestURI)
-			fmt.Println("    ")
 		}
 	}
 }

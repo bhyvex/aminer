@@ -131,11 +131,13 @@ func runAnalyticsCmd(c *cli.Context) {
 			if skip {
 				continue
 			}
+			requestURI := result.HTTP.Request.RequestURI
 			if result.StatusMessage == "" || result.StatusMessage == "OK" {
-				if strings.HasSuffix(result.HTTP.Request.RequestURI, "minio") || strings.HasSuffix(result.HTTP.Request.RequestURI, "minio.exe") || strings.HasSuffix(result.HTTP.Request.RequestURI, "mc") || strings.HasSuffix(result.HTTP.Request.RequestURI, "mc.exe") {
-
-					if err := updateGoogleAnalytics(conf, result); err != nil {
-						log.Fatal(err.Trace())
+				for _, supportedBin := range supportedBinaries {
+					if strings.HasSuffix(requestURI, supportedBin) {
+						if err := updateGoogleAnalytics(conf, result); err != nil {
+							log.Fatal(err.Trace())
+						}
 					}
 				}
 			}
