@@ -19,6 +19,7 @@ package main
 import "github.com/minio/cli"
 
 var commands = []cli.Command{
+	findRawCmd,
 	findCmd,
 	populateCmd,
 	analyticsCmd,
@@ -29,6 +30,12 @@ var findCmd = cli.Command{
 	Name:   "find",
 	Usage:  "find all documents for a map",
 	Action: runFindCmd,
+}
+
+var findRawCmd = cli.Command{
+	Name:   "find-raw",
+	Usage:  "find all documents for a map from logs",
+	Action: runFindRawCmd,
 }
 
 var populateCmd = cli.Command{
@@ -50,6 +57,10 @@ var configCmd = cli.Command{
 }
 
 var flags = []cli.Flag{
+	cli.BoolFlag{
+		Name:  "json",
+		Usage: "Enable json output.",
+	},
 	cli.StringFlag{
 		Name:  "server",
 		Value: "localhost",

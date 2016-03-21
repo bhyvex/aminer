@@ -17,6 +17,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -48,6 +49,16 @@ func runFindCmd(c *cli.Context) {
 			}
 			if strings.HasSuffix(result.HTTP.Request.RequestURI, "minio") || strings.HasSuffix(result.HTTP.Request.RequestURI, "minio.exe") || strings.HasSuffix(result.HTTP.Request.RequestURI, "mc") || strings.HasSuffix(result.HTTP.Request.RequestURI, "mc.exe") {
 
+				if c.GlobalBool("json") {
+					type resultJSON struct {
+						Method     string
+						RemoteAddr string
+						RequestURI string
+					}
+					resultBytes, _ := json.Marshal(resultJSON{Method: result.HTTP.Request.Method, RemoteAddr: result.HTTP.Request.RemoteAddr, RequestURI: result.HTTP.Request.RequestURI})
+					fmt.Println(string(resultBytes))
+					continue
+				}
 				fmt.Print(result.HTTP.Request.Method)
 				fmt.Print("    ")
 				fmt.Print(result.HTTP.Request.RemoteAddr)
