@@ -38,7 +38,9 @@ var supportedBinaries = []string{
 	"minio.zip",
 	"minio.tar.gz",
 	"minio.gz",
-	// Add new binaries here.
+	"minio.tgz",
+	"mc.tgz",
+	// Add new binaries archives here.
 }
 
 // LogMessage is a serializable json log message
