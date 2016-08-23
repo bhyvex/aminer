@@ -28,7 +28,6 @@ import (
 	"time"
 
 	"github.com/minio/cli"
-	"github.com/minio/minio-xl/pkg/probe"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -53,7 +52,7 @@ func GetUserAgent(name string, version string, comments ...string) string {
 	return ""
 }
 
-func updateGoogleAnalytics(c *configV1, result LogMessage) *probe.Error {
+func updateGoogleAnalytics(c *configV1, result LogMessage) error {
 	var payload bytes.Buffer
 	payload.WriteString("v=1")
 	// Tracking id UA-XXXXXXXX-1
@@ -79,15 +78,15 @@ func updateGoogleAnalytics(c *configV1, result LogMessage) *probe.Error {
 	if !c.Production {
 		req, err := http.NewRequest("GET", DebugAnalytics+"?"+payload.String(), nil)
 		if err != nil {
-			return probe.NewError(err)
+			return err
 		}
 		client := http.Client{}
 		resp, err := client.Do(req)
 		if err != nil {
-			return probe.NewError(err)
+			return err
 		}
 		if resp.StatusCode != http.StatusOK {
-			return probe.NewError(errors.New("Data was not uploaded error: " + resp.Status))
+			return errors.New("Data was not uploaded error: " + resp.Status)
 		}
 		var b bytes.Buffer
 		io.Copy(&b, resp.Body)
@@ -96,14 +95,14 @@ func updateGoogleAnalytics(c *configV1, result LogMessage) *probe.Error {
 	}
 	req, err := http.NewRequest("POST", SSLAnalytics, &payload)
 	if err != nil {
-		return probe.NewError(err)
+		return err
 	}
 	req.Header.Set("User-Agent", GetUserAgent(AppName, AppVersion, runtime.GOOS, runtime.GOARCH))
 
 	client := http.Client{}
 	_, err = client.Do(req)
 	if err != nil {
-		return probe.NewError(err)
+		return err
 	}
 	return nil
 }
@@ -111,7 +110,7 @@ func updateGoogleAnalytics(c *configV1, result LogMessage) *probe.Error {
 func runAnalyticsCmd(c *cli.Context) {
 	conf, err := loadConfigV1()
 	if err != nil {
-		log.Fatal(err.Trace())
+		log.Fatal(err.Error())
 	}
 	s := connectToMongo(c)
 	defer s.Close()
@@ -136,7 +135,7 @@ func runAnalyticsCmd(c *cli.Context) {
 				for _, supportedBin := range supportedBinaries {
 					if strings.HasSuffix(requestURI, supportedBin) {
 						if err := updateGoogleAnalytics(conf, result); err != nil {
-							log.Fatal(err.Trace())
+							log.Fatal(err.Error())
 						}
 					}
 				}

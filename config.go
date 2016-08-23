@@ -29,8 +29,7 @@ import (
 	"sync"
 
 	"github.com/minio/cli"
-	"github.com/minio/minio-xl/pkg/probe"
-	"github.com/minio/minio-xl/pkg/quick"
+	"github.com/minio/minio/pkg/quick"
 )
 
 // configV1
@@ -55,10 +54,10 @@ func isConfigExist() bool {
 	return true
 }
 
-func getConfigPath() (string, *probe.Error) {
+func getConfigPath() (string, error) {
 	u, err := user.Current()
 	if err != nil {
-		return "", probe.NewError(err)
+		return "", err
 	}
 	// For windows the path is slightly different
 	switch runtime.GOOS {
@@ -69,10 +68,10 @@ func getConfigPath() (string, *probe.Error) {
 	}
 }
 
-func loadConfigV1() (*configV1, *probe.Error) {
+func loadConfigV1() (*configV1, error) {
 	configFile, err := getConfigPath()
 	if err != nil {
-		return nil, err.Trace()
+		return nil, err
 	}
 	// Cached in private global variable.
 	if v := cache.Get(); v != nil { // Use previously cached config.
@@ -81,11 +80,11 @@ func loadConfigV1() (*configV1, *probe.Error) {
 	conf := new(configV1)
 	qconf, err := quick.New(conf)
 	if err != nil {
-		return nil, err.Trace()
+		return nil, err
 	}
 	err = qconf.Load(configFile)
 	if err != nil {
-		return nil, err.Trace()
+		return nil, err
 	}
 	cache.Put(qconf)
 	return qconf.Data().(*configV1), nil
@@ -98,20 +97,20 @@ func newConfigV1() *configV1 {
 	return conf
 }
 
-func writeConfig() *probe.Error {
+func writeConfig() error {
 	conf := newConfigV1()
 	configFile, err := getConfigPath()
 	if err != nil {
-		return err.Trace()
+		return err
 	}
 	if err := os.MkdirAll(filepath.Dir(configFile), 0700); err != nil {
-		return probe.NewError(err)
+		return err
 	}
 	qconf, err := quick.New(conf)
 	if err != nil {
-		return err.Trace()
+		return err
 	}
-	return qconf.Save(configFile).Trace()
+	return qconf.Save(configFile)
 }
 
 // newUUID generates a random UUID according to RFC 4122
